@@ -1,0 +1,33 @@
+{
+  "conditions": [],
+  "parameters": {
+    "season_id": {
+      "defaultValue": { "value": "2026_summer" },
+      "valueType": "STRING",
+      "description": "Active season id; controls SeasonPassSystem and shop banners."
+    },
+    "enable_csv_import": {
+      "defaultValue": { "value": "true" },
+      "valueType": "BOOLEAN",
+      "description": "Toggle Goodreads CSV import UI."
+    },
+    "xp_per_book_finished": {
+      "defaultValue": { "value": "100" },
+      "valueType": "NUMBER",
+      "description": "Season pass XP granted per book marked Read."
+    },
+    "xp_per_review": {
+      "defaultValue": { "value": "25" },
+      "valueType": "NUMBER",
+      "description": "Season pass XP granted per review submitted."
+    },
+    "open_library_user_agent": {
+      "defaultValue": { "value": "LibraryGame/1.0 (contact@example.com)" },
+      "valueType": "STRING",
+      "description": "User-Agent sent to openlibrary.org. Required by their ToS."
+    }
+  },
+  "version": {
+    "description": "Initial Library Game RC template."
+  }
+}

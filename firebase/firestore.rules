@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------- Helpers --------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    // Disallow writes to keys clients should not control directly.
+    function noServerOnlyFields(data) {
+      return !data.diff(resource.data).affectedKeys().hasAny(
+        ['flags', 'currency.hard']
+      );
+    }
+
+    // -------- User root doc --------
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+                    && !('flags' in request.resource.data)
+                    && (!('currency' in request.resource.data) ||
+                        !('hard' in request.resource.data.currency));
+      allow update: if isOwner(uid) && noServerOnlyFields(request.resource.data);
+      allow delete: if false;
+
+      // Per-user subcollections: read/write iff the user owns the parent.
+      match /books/{bookId} {
+        allow read, write: if isOwner(uid);
+      }
+      match /reviews/{reviewId} {
+        allow read, write: if isOwner(uid);
+      }
+      match /ownedItems/{itemId} {
+        // Server-authoritative: clients cannot mint inventory directly.
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+      match /roomLayouts/{layoutId} {
+        allow read, write: if isOwner(uid);
+      }
+      match /achievements/{achievementId} {
+        // Progress can be set by client; rewards granted by server.
+        allow read: if isOwner(uid);
+        allow write: if isOwner(uid)
+                     && !('rewardClaimedAt' in request.resource.data.diff(resource.data).affectedKeys());
+      }
+      match /seasonPassProgress/{seasonId} {
+        // Tier/xp set by Functions on validated events; isPremium set by IAP receipt validation.
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // -------- Public catalog (server-authored) --------
+    match /catalog/{type}/{itemId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // -------- Global Open Library cache --------
+    match /bookCache/{bookId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
