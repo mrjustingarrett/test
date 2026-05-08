@@ -10,8 +10,8 @@ namespace LibraryGame.Data.Models
         public string body;              // markdown
         public float rating;
         public bool spoiler;
-        public DateTime createdAt;
-        public DateTime updatedAt;
-        public string visibility;        // "private" | "friends" | "public"
+        public long createdAtUnixMs;
+        public long updatedAtUnixMs;
+        public string visibility = "private";
     }
 }

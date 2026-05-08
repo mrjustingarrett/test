@@ -6,7 +6,7 @@ namespace LibraryGame.Data.Models
     public sealed class OwnedItemDoc
     {
         public string itemId;
-        public DateTime acquiredAt;
+        public long acquiredAtUnixMs;
         public string source;            // "achievement" | "purchase_soft" | "purchase_hard" | "season_pass" | "gift"
         public string seasonPassId;
         public string variantId;

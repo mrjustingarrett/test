@@ -9,8 +9,8 @@ namespace LibraryGame.Data.Models
         public string achievementId;
         public int progress;
         public int target;
-        public DateTime? unlockedAt;
-        public DateTime? rewardClaimedAt;
+        public long unlockedAtUnixMs; // 0 if locked
+        public long rewardClaimedAtUnixMs;
         public List<string> rewardItemIds = new();
     }
 }

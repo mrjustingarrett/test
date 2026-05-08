@@ -12,7 +12,7 @@ namespace LibraryGame.Data.Models
         public bool isPremium;
         public List<int> claimedFreeTiers = new();
         public List<int> claimedPremiumTiers = new();
-        public DateTime startedAt;
-        public DateTime expiresAt;
+        public long startedAtUnixMs;
+        public long expiresAtUnixMs;
     }
 }

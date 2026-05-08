@@ -16,30 +16,18 @@ namespace LibraryGame.Data.Models
         public List<string> authors = new();
         public string coverUrl;
         public string publisher;
-        public int? publishYear;
-        public int? pageCount;
+        public int publishYear = -1;     // -1 = unknown
+        public int pageCount = -1;
         public List<string> genres = new();
-        public Series series;
-        public string status;            // "want_to_read" | "reading" | "read" | "dnf"
+        public string seriesName;
+        public int seriesIndex = -1;
+        public string status = "want_to_read"; // "want_to_read" | "reading" | "read" | "dnf"
         public List<string> shelves = new();
-        public DateTime addedAt;
-        public DateTime? startedAt;
-        public DateTime? finishedAt;
-        public float? rating;            // 0..5, 0.5 increments
-        public Progress progress;
-
-        [Serializable]
-        public sealed class Series
-        {
-            public string name;
-            public int index;
-        }
-
-        [Serializable]
-        public sealed class Progress
-        {
-            public int page;
-            public float percent;
-        }
+        public long addedAtUnixMs;
+        public long startedAtUnixMs;     // 0 if not set
+        public long finishedAtUnixMs;
+        public float rating = -1f;       // -1 = unrated, else 0..5
+        public int progressPage;
+        public float progressPercent;
     }
 }
