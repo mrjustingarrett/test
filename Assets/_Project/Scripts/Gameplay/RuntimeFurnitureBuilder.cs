@@ -4,12 +4,32 @@ using UnityEngine;
 namespace LibraryGame.Gameplay
 {
     /// <summary>
-    /// Builds a placeholder 3D mesh for a FurnitureCatalog.Item by combining
-    /// primitive cubes (and a sphere/cylinder where it helps). Programmer art.
+    /// Builds a 3D GameObject for a FurnitureCatalog.Item.
+    /// Tries Resources.Load first (real Kenney model); falls back to procedural geometry.
     /// </summary>
     public static class RuntimeFurnitureBuilder
     {
         public static GameObject Build(FurnitureCatalog.Item item, Transform parent)
+        {
+            if (!string.IsNullOrEmpty(item.modelPath))
+            {
+                var prefab = Resources.Load<GameObject>(item.modelPath);
+                if (prefab != null)
+                {
+                    var go = Object.Instantiate(prefab);
+                    go.name = $"Item_{item.id}";
+                    go.transform.SetParent(parent, false);
+                    return go;
+                }
+                Debug.LogWarning($"[FurnitureBuilder] Model not found at Resources/{item.modelPath} — using procedural fallback. Run LibraryGame > Setup Kenney Assets to fix this.");
+            }
+
+            return BuildProcedural(item, parent);
+        }
+
+        // ── Procedural fallback ──────────────────────────────────────────────
+
+        private static GameObject BuildProcedural(FurnitureCatalog.Item item, Transform parent)
         {
             var root = new GameObject($"Item_{item.id}");
             root.transform.SetParent(parent, false);
@@ -57,9 +77,7 @@ namespace LibraryGame.Gameplay
 
         private static void BuildShelf(Transform p, FurnitureCatalog.Item it, Material mat)
         {
-            // Frame
             Cube(p, "Frame", new Vector3(0, it.size.y * 0.5f, 0), it.size, mat);
-            // 3 horizontal bands of "books" inset on the front
             var bookMatA = MakeMat(new Color(0.85f, 0.55f, 0.30f));
             var bookMatB = MakeMat(new Color(0.30f, 0.45f, 0.65f));
             for (int i = 0; i < 3; i++)
@@ -76,12 +94,9 @@ namespace LibraryGame.Gameplay
         private static void BuildChair(Transform p, FurnitureCatalog.Item it, Material mat)
         {
             float seatH = 0.45f;
-            // Seat
             Cube(p, "Seat", new Vector3(0, seatH, 0), new Vector3(it.size.x, 0.20f, it.size.z), mat);
-            // Back
             Cube(p, "Back", new Vector3(0, seatH + 0.45f, -it.size.z * 0.5f + 0.1f),
                 new Vector3(it.size.x, 0.9f, 0.15f), mat);
-            // Armrests
             Cube(p, "ArmL", new Vector3(-it.size.x * 0.5f + 0.07f, seatH + 0.20f, 0),
                 new Vector3(0.15f, 0.20f, it.size.z * 0.9f), mat);
             Cube(p, "ArmR", new Vector3(it.size.x * 0.5f - 0.07f, seatH + 0.20f, 0),
@@ -95,7 +110,6 @@ namespace LibraryGame.Gameplay
             Cube(p, "Pole", new Vector3(0, it.size.y * 0.5f, 0), new Vector3(0.05f, it.size.y, 0.05f), poleMat);
             Sphere(p, "Bulb", new Vector3(0, it.size.y, 0), new Vector3(it.size.x, it.size.x, it.size.x), mat);
 
-            // Add a real light inside the bulb (modest range so it doesn't blow out the room)
             var lightGo = new GameObject("Light");
             lightGo.transform.SetParent(p, false);
             lightGo.transform.localPosition = new Vector3(0, it.size.y, 0);
@@ -111,7 +125,6 @@ namespace LibraryGame.Gameplay
             var trunkMat = MakeMat(new Color(0.30f, 0.20f, 0.12f));
             Cube(p, "Pot", new Vector3(0, 0.15f, 0), new Vector3(it.size.x * 0.6f, 0.30f, it.size.z * 0.6f), trunkMat);
             Cube(p, "Trunk", new Vector3(0, 0.55f, 0), new Vector3(0.10f, 0.5f, 0.10f), trunkMat);
-            // Foliage stack: three increasing-size cubes (or cones if we had them)
             float baseY = 0.85f;
             float h = it.size.y - baseY;
             int slices = 4;
@@ -125,9 +138,7 @@ namespace LibraryGame.Gameplay
         }
 
         private static void BuildRug(Transform p, FurnitureCatalog.Item it, Material mat)
-        {
-            Cube(p, "Rug", new Vector3(0, it.size.y * 0.5f, 0), it.size, mat);
-        }
+            => Cube(p, "Rug", new Vector3(0, it.size.y * 0.5f, 0), it.size, mat);
 
         private static void BuildPainting(Transform p, FurnitureCatalog.Item it, Material mat)
         {
