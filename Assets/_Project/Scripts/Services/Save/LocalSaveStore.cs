@@ -14,7 +14,7 @@ namespace LibraryGame.Services.Save
 
         public LocalSaveStore()
         {
-            _root = Path.Combine(Application.persistentDataPath, "saves");
+            _root = System.IO.Path.Combine(Application.persistentDataPath, "saves");
             Directory.CreateDirectory(_root);
         }
 
