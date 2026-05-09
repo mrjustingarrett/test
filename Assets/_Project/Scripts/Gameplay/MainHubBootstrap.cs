@@ -37,23 +37,30 @@ namespace LibraryGame.Gameplay
         {
             if (RoomRoot != null) return;
 
-            // Lighting (initial values; WeatherTimeSystem overrides each Tick).
+            // Ambient — warm interior feel, not outdoor blue sky.
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.55f, 0.62f, 0.75f);
-            RenderSettings.ambientEquatorColor = new Color(0.50f, 0.50f, 0.55f);
-            RenderSettings.ambientGroundColor = new Color(0.20f, 0.18f, 0.16f);
-            RenderSettings.fog = true;
-            RenderSettings.fogColor = new Color(0.85f, 0.85f, 0.92f);
-            RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = 12f;
-            RenderSettings.fogEndDistance = 50f;
+            RenderSettings.ambientSkyColor     = new Color(0.62f, 0.56f, 0.46f);  // warm ceiling bounce
+            RenderSettings.ambientEquatorColor = new Color(0.52f, 0.48f, 0.42f);
+            RenderSettings.ambientGroundColor  = new Color(0.18f, 0.15f, 0.12f);  // dark floor shadow
+            RenderSettings.fog = false; // fog inside a small room looks wrong
 
+            // Sun — comes through the east window at a shallow angle.
             var sunGo = new GameObject("Sun");
             var sun = sunGo.AddComponent<Light>();
-            sun.type = LightType.Directional;
-            sun.color = new Color(1f, 0.96f, 0.86f);
-            sun.intensity = 1.05f;
-            sunGo.transform.rotation = Quaternion.Euler(50f, 30f, 0f);
+            sun.type      = LightType.Directional;
+            sun.color     = new Color(1.00f, 0.94f, 0.78f);
+            sun.intensity = 0.85f;
+            sun.shadows   = LightShadows.Soft;
+            sunGo.transform.rotation = Quaternion.Euler(38f, -110f, 0f); // shines in from east wall window
+
+            // Fill light — soft bluish sky fill from the window side, no shadows.
+            var fillGo = new GameObject("FillLight");
+            var fill = fillGo.AddComponent<Light>();
+            fill.type      = LightType.Directional;
+            fill.color     = new Color(0.60f, 0.72f, 0.90f);
+            fill.intensity = 0.25f;
+            fill.shadows   = LightShadows.None;
+            fillGo.transform.rotation = Quaternion.Euler(20f, 70f, 0f);
 
             // Room geometry
             RoomRoot = RuntimeRoomBuilder.Build();

@@ -21,11 +21,33 @@ namespace LibraryGame.Services.Inventory
         public InventorySystem(SaveSystem save)
         {
             _save = save;
-            // Grant the starter shelf if the user has nothing yet.
+
             if (_save.Owned.items.Count == 0)
             {
-                Grant("starter_shelf", "achievement");
+                // First ever run — grant a full starter library set silently (no save spam).
+                var starterIds = new[]
+                {
+                    "starter_shelf", "oak_bookshelf", "reading_chair", "cozy_armchair",
+                    "floor_lamp", "rug_red", "rug_blue", "end_table", "coffee_table",
+                    "desk", "potted_fern", "big_plant", "globe_lamp"
+                };
+                foreach (var id in starterIds)
+                {
+                    if (!Has(id))
+                        _save.Owned.items.Add(new OwnedItemDoc
+                        {
+                            itemId = id,
+                            acquiredAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                            source = "starter",
+                            quantity = 1
+                        });
+                }
+                _save.SaveOwned();
+                InventoryChanged?.Invoke();
             }
+
+            if (_save.Layout.placements.Count == 0)
+                SeedDefaultLayout();
         }
 
         public IReadOnlyList<OwnedItemDoc> Owned => _save.Owned.items;
@@ -126,17 +148,56 @@ namespace LibraryGame.Services.Inventory
 
         private bool IsSlotUsed(int i) => _save.Layout.placements.Exists(p => p.gridX == i);
 
-        // Rotate so items face into the room.
         private static float SuggestRotationForSlot(int i)
         {
-            // Slots 0..3 along +Z wall → face -Z (rotate 180)
             if (i >= 0 && i <= 3) return 180f;
-            // Slots 4..5 along +X wall → face -X (rotate 270)
             if (i == 4 || i == 5) return 270f;
-            // Slots 6..9 along -Z wall → face +Z (rotate 0)
             if (i >= 6 && i <= 9) return 0f;
-            // Slots 10..11 along -X wall → face +X (rotate 90)
             return 90f;
+        }
+
+        /// <summary>Fills the room with a curated starting layout on a brand-new save.</summary>
+        private void SeedDefaultLayout()
+        {
+            int nextId = 0;
+            void Add(string id, float x, float z, float rot, float scale = 1f)
+            {
+                if (!Has(id)) return;
+                _save.Layout.placements.Add(new RoomLayoutDoc.Placement
+                {
+                    itemId = id, posX = x, posY = 0f, posZ = z,
+                    rotationY = rot, scale = scale,
+                    gridX = nextId++, gridZ = 0
+                });
+            }
+
+            // Back wall — bookshelf row
+            Add("oak_bookshelf",  -3.5f,  4.7f, 180f);
+            Add("starter_shelf",  -1.2f,  4.7f, 180f);
+            Add("starter_shelf",   1.2f,  4.7f, 180f);
+            Add("oak_bookshelf",   3.5f,  4.7f, 180f);
+
+            // West wall — tall plant + floor lamp alcove
+            Add("big_plant",      -4.6f,  3.5f,  90f);
+            Add("floor_lamp",     -4.6f,  1.0f,  90f);
+            Add("desk",           -4.0f, -1.5f,  90f, 0.95f);
+
+            // East wall — seating area
+            Add("reading_chair",   3.8f,  1.8f, 270f);
+            Add("cozy_armchair",   3.8f, -1.0f, 270f);
+            Add("end_table",       4.1f,  0.4f, 270f, 0.85f);
+
+            // Center — rug and coffee table
+            Add("rug_red",         0f,    0.5f,   0f);
+            Add("coffee_table",    0f,    0.5f,   0f, 0.9f);
+
+            // Near south wall — a second lamp and plant
+            Add("globe_lamp",      2.5f, -4.5f,   0f);
+            Add("potted_fern",    -2.5f, -4.5f,   0f);
+
+            _save.Layout.updatedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            _save.SaveLayout();
+            LayoutChanged?.Invoke();
         }
     }
 }
